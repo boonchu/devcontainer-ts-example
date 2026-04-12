@@ -1,0 +1,31 @@
+services:
+  app:
+    image: mcr.microsoft.com/devcontainers/javascript-node:1-18-bullseye
+    working_dir: /workspace
+    volumes:
+      - ..:/workspace:cached
+    ports:
+      - 3000:3000
+
+  test:
+    image: nvidia/cuda:12.9.0-base-ubuntu22.04
+    command: nvidia-smi
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - 11434:11434
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
