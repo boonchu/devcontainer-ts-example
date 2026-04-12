@@ -1,12 +1,12 @@
 import express, { Express, Request, Response } from 'express';
 import os from 'os';
-import { retrieveDocuments } from '../lib/retrievalDocument';
-
-// Constants
-const PORT: number = 3000;
-const HOST: string = '0.0.0.0';
 
 // Types
+interface Document {
+	id: string;
+	text: string;
+}
+
 interface EnvironmentInfo {
 	platform: string;
 	nodeVersion: string;
@@ -43,6 +43,32 @@ interface ChatResponse {
 	done: boolean;
 }
 
+// Constants
+const PORT: number = 3000;
+const HOST: string = '0.0.0.0';
+
+// Retrieval helper
+const documents: Document[] = [
+	{ id: '1', text: 'The privacy policy states user data is retained for 30 days.' },
+	{ id: '2', text: 'Payment information is encrypted and stored securely.' },
+	{ id: '3', text: 'We do not share user email addresses with third parties.' }
+];
+
+function scoreDocument(query: string, doc: Document): number {
+	const queryTerms = query.toLowerCase().split(/\s+/);
+	const text = doc.text.toLowerCase();
+	return queryTerms.reduce((score, term) => score + (text.includes(term) ? 1 : 0), 0);
+}
+
+async function retrieveDocuments(query: string): Promise<Document[]> {
+	return documents
+		.map(doc => ({ doc, score: scoreDocument(query, doc) }))
+		.filter(item => item.score > 0)
+		.sort((a, b) => b.score - a.score)
+		.slice(0, 3)
+		.map(item => item.doc);
+}
+
 // App
 const app: Express = express();
 
@@ -53,15 +79,15 @@ app.get('/', (_req: Request, res: Response): void => {
 });
 
 app.get('/app/version', async (_req: Request, res: Response<EnvironmentInfo>): Promise<void> => {
-	let ollamaVersion: Record<string, unknown> | null = null;
+	let vllmVersion: Record<string, unknown> | null = null;
 
 	try {
-		const response = await fetch('http://ollama:11434/api/version');
+		const response = await fetch('http://vllm:8000/api/version');
 		if (response.ok) {
-			ollamaVersion = await response.json() as Record<string, unknown>;
+			vllmVersion = await response.json() as Record<string, unknown>;
 		}
 	} catch {
-		ollamaVersion = null;
+		vllmVersion = null;
 	}
 
 	res.json({
@@ -73,32 +99,32 @@ app.get('/app/version', async (_req: Request, res: Response<EnvironmentInfo>): P
 		osRelease: os.release(),
 		hostname: os.hostname(),
 		uptime: process.uptime(),
-		ollamaVersion: ollamaVersion
+		vllmVersion: vllmVersion
 	});
 });
 
 app.post('/api/generate', async (req: Request, res: Response): Promise<void> => {
-	const { question, model = 'phi' } = req.body;
-	const docs = await retrieveDocuments(question);
+	const { prompt, model = 'phi' } = req.body;
+	const docs = await retrieveDocuments(prompt);
 
 	const context = docs.map((d, i) => `Context ${i + 1}: ${d.text}`).join('\n\n');
-	const prompt = `
+	const fullPrompt = `
 Use the following documents to answer the question.
 If the answer is not in the documents, say "I don't know."
 
 ${context}
 
-Question: ${question}
+Question: ${prompt}
 Answer:
 `;
 	try {
-		const response = await fetch('http://ollama:11434/api/generate', {
+		const response = await fetch('http://vllm:8000/v1/completions', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
-				model: model,
-				prompt: prompt,
-				stream: false
+				model: 'microsoft/phi-2',
+				prompt: fullPrompt,
+				max_tokens: 512
 			})
 		});
 		const data = await response.json() as OllamaResponse;
@@ -111,13 +137,13 @@ Answer:
 app.post('/app/chat', async (req: Request, res: Response): Promise<void> => {
 	const { messages, model = 'phi' } = req.body as ChatRequest;
 	try {
-		const response = await fetch('http://ollama:11434/api/chat', {
+		const response = await fetch('http://vllm:8000/v1/chat/completions', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
-				model: model,
+				model: 'microsoft/phi-2',
 				messages: messages,
-				stream: false
+				max_tokens: 512
 			})
 		});
 		const data = await response.json() as ChatResponse;

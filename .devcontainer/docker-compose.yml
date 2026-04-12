@@ -9,23 +9,16 @@ services:
     ports:
       - 3000:3000
     depends_on:
-      - ollama
+      - vllm
 
-  test:
-    image: nvidia/cuda:12.9.0-base-ubuntu22.04
-    command: nvidia-smi
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-
-  ollama:
-    image: ollama/ollama:latest
+  # vllm: Faster inference (optimized batching) and support for larger models, but more complex setup and higher resource usage.
+  vllm:
+    image: vllm/vllm-openai:latest
     ports:
-      - 11434:11434
+      - 8000:8000
+    environment:
+      - MODEL_NAME=microsoft/phi-2
+    command: --model microsoft/phi-2 --tensor-parallel-size 1
     deploy:
       resources:
         reservations:
@@ -33,3 +26,16 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
+    volumes:
+      - huggingface_cache:/root/.cache/huggingface
+
+  # test:
+  #   image: nvidia/cuda:12.9.0-base-ubuntu22.04
+  #   command: nvidia-smi
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: 1
+  #             capabilities: [gpu]

@@ -27,15 +27,17 @@ sudo apt-get install -y nvidia-container-toolkit
 sudo apt-get install -y nvidia-container-toolkit
 sudo systemctl restart docker
 ```
+
 2. ### How to run example:
    - Pull model `phi`
    - Run Curl
+
 ```
 docker exec vscode-remote-try-node_devcontainer-ollama-1 ollama pull phi
 
-curl -X POST http://localhost:3000/ollama \
+curl -X POST http://localhost:3000/api/generate \
    -H "Content-Type: application/json" \
-   -d '{"question":"How long is user data retained?","model":"phi"}'
+   -d '{"prompt": "Please demostrate how the private policy works."}'
 
 # results from my MX450 GPU (TTFT: 1 minute)
 [GIN] 2026/04/12 - 20:08:21 | 200 |          1m1s |      172.18.0.3 | POST     "/api/generate"
@@ -51,7 +53,9 @@ curl -X POST http://localhost:3000/app/chat \
     ]
   }'
 ```
+
 3. ### Watch load from `nvtop` or NVDIA Control Panel
+
 ```
 docker run --rm -t --gpus all nvidia/cuda:12.9.0-base-ubuntu22.04 bash -c "apt-get update && apt-get install -y nvtop && nvtop"
 ```
