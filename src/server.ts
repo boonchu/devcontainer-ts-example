@@ -21,7 +21,7 @@ interface EnvironmentInfo {
 const app: Express = express();
 
 app.get('/', (_req: Request, res: Response): void => {
-	res.send('Hello remote world!\n');
+	res.send('Hello my service!\n');
 });
 
 app.get('/environment', (_req: Request, res: Response<EnvironmentInfo>): void => {
