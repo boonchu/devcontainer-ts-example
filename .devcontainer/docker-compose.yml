@@ -1,11 +1,15 @@
 services:
   app:
-    image: mcr.microsoft.com/devcontainers/javascript-node:1-18-bullseye
+    build:
+      context: .
+      dockerfile: ../src/Dockerfile
     working_dir: /workspace
     volumes:
       - ..:/workspace:cached
     ports:
       - 3000:3000
+    depends_on:
+      - ollama
 
   test:
     image: nvidia/cuda:12.9.0-base-ubuntu22.04

@@ -1,15 +1,15 @@
 {
 	"name": "Node.js",
-	"image": "mcr.microsoft.com/devcontainers/javascript-node:1-18-bullseye",
-	// "dockerComposeFile": [
-	// 	"docker-compose.yml"
-	// ],
-	// "service": "app",
-	// "workspaceFolder": "/workspace",
-	// "runServices": [
-	// 	"app",
-	// 	"ollama"
-	// ],
+	// "image": "mcr.microsoft.com/devcontainers/javascript-node:1-18-bullseye",
+	"dockerComposeFile": [
+		"docker-compose.yml"
+	],
+	"service": "app",
+	"workspaceFolder": "/workspace",
+	"runServices": [
+		"app",
+		"ollama"
+	],
 	// Configure tool-specific properties.
 	"customizations": {
 		// Configure properties specific to VS Code.
@@ -22,15 +22,15 @@
 	},
 	"forwardPorts": [
 		3000,
-		// 11434
+		11434
 	],
 	"portsAttributes": {
-		// "11434": {
-		// 	"label": "Ollama API",
-		// 	"onAutoForward": "notify"
-		// }
 		"3000": {
 			"label": "Hello Remote World",
+			"onAutoForward": "notify"
+		},
+		"11434": {
+			"label": "Ollama API",
 			"onAutoForward": "notify"
 		}
 	},

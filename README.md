@@ -27,10 +27,26 @@ sudo apt-get install -y nvidia-container-toolkit
 sudo apt-get install -y nvidia-container-toolkit
 sudo systemctl restart docker
 ```
+2. ### How to run example:
+   - Pull model `phi`
+   - Run Curl
+```
+docker exec vscode-remote-try-node_devcontainer-ollama-1 ollama pull phi
 
-2. ### When devcontainer does not start, try to troubleshoot it from top level:
+curl -X POST http://localhost:3000/ollama \
+   -H "Content-Type: application/json" \
+   -d '{"prompt": "Explain the concept of recursion in programming."}'
+
+# results from my MX450 GPU
+[GIN] 2026/04/12 - 20:08:21 | 200 |          1m1s |      172.18.0.3 | POST     "/api/generate"
+[GIN] 2026/04/12 - 20:10:21 | 200 | 36.227724978s |      172.18.0.3 | POST     "/api/generate"
+```
+
+3. ### When devcontainer does not start, try to troubleshoot it from top level:
 
 ```
+# shutdown docker compose first
+ docker compose --project-name vscode-remote-try-node_devcontainer -f /home/bigchoo/vscode-remote-try-node/.devcontainer/docker-compose.yml -f /tmp/<find docker filepath from past output>.yml -f /tmp/devcontainercli-<find docker filepath from past output>*.yml down
 rm -rf /tmp/devcontainercli-*
 devcontainer up
 ```
