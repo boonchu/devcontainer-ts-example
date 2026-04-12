@@ -16,7 +16,7 @@ interface EnvironmentInfo {
 	osRelease: string;
 	hostname: string;
 	uptime: number;
-	ollamaVersion: Record<string, unknown> | null;
+	vllmVersion: Record<string, unknown> | null;
 }
 
 interface OllamaResponse {
@@ -104,7 +104,7 @@ app.get('/app/version', async (_req: Request, res: Response<EnvironmentInfo>): P
 });
 
 app.post('/api/generate', async (req: Request, res: Response): Promise<void> => {
-	const { prompt, model = 'phi' } = req.body;
+	const { prompt } = req.body;
 	const docs = await retrieveDocuments(prompt);
 
 	const context = docs.map((d, i) => `Context ${i + 1}: ${d.text}`).join('\n\n');
@@ -135,7 +135,7 @@ Answer:
 });
 
 app.post('/app/chat', async (req: Request, res: Response): Promise<void> => {
-	const { messages, model = 'phi' } = req.body as ChatRequest;
+	const { messages } = req.body as ChatRequest;
 	try {
 		const response = await fetch('http://vllm:8000/v1/chat/completions', {
 			method: 'POST',
