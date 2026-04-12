@@ -35,7 +35,7 @@ docker exec vscode-remote-try-node_devcontainer-ollama-1 ollama pull phi
 
 curl -X POST http://localhost:3000/ollama \
    -H "Content-Type: application/json" \
-   -d '{"prompt": "Explain the concept of recursion in programming."}'
+   -d '{"question":"How long is user data retained?","model":"phi"}'
 
 # results from my MX450 GPU (TTFT: 1 minute)
 [GIN] 2026/04/12 - 20:08:21 | 200 |          1m1s |      172.18.0.3 | POST     "/api/generate"
