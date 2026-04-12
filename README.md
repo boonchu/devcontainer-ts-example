@@ -15,7 +15,7 @@ Follow these steps to open this sample in a container using the VS Code Dev Cont
 1. ### If this is your first time using a WSL2 development container, please ensure your system meets the pre-reqs:
    - Install Docker service in WSL2.
    - Ensure the NVIDIA GPU driver is installed.
-   - Installing NVIDIA Container Toolkit.
+   - Installing [NVIDIA Container Toolkit](https://github.com/NVIDIA/nvidia-container-toolkit).
 
 ```
 curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
@@ -37,12 +37,26 @@ curl -X POST http://localhost:3000/ollama \
    -H "Content-Type: application/json" \
    -d '{"prompt": "Explain the concept of recursion in programming."}'
 
-# results from my MX450 GPU
+# results from my MX450 GPU (TTFT: 1 minute)
 [GIN] 2026/04/12 - 20:08:21 | 200 |          1m1s |      172.18.0.3 | POST     "/api/generate"
 [GIN] 2026/04/12 - 20:10:21 | 200 | 36.227724978s |      172.18.0.3 | POST     "/api/generate"
+
+curl -X POST http://localhost:3000/app/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "phi",
+    "messages": [
+      {"role": "system", "content": "You are Phi-2, an AI assistant expert in mathematics. Solve equations step-by-step, show your work clearly, and explain each step logically."},
+      {"role": "user", "content": "Solve the quadratic equation: 2x² - 5x - 3 = 0. Provide the solutions and verify one of them."}
+    ]
+  }'
+```
+3. ### Watch load from `nvtop` or NVDIA Control Panel
+```
+docker run --rm -t --gpus all nvidia/cuda:12.9.0-base-ubuntu22.04 bash -c "apt-get update && apt-get install -y nvtop && nvtop"
 ```
 
-3. ### When devcontainer does not start, try to troubleshoot it from top level:
+4. ### When devcontainer does not start, try to troubleshoot it from top level:
 
 ```
 # shutdown docker compose first
