@@ -1,8 +1,3 @@
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
-
 import express, { Express, Request, Response } from 'express';
 import os from 'os';
 
@@ -25,11 +20,11 @@ interface EnvironmentInfo {
 // App
 const app: Express = express();
 
-app.get('/', (req: Request, res: Response): void => {
+app.get('/', (_req: Request, res: Response): void => {
 	res.send('Hello remote world!\n');
 });
 
-app.get('/environment', (req: Request, res: Response<EnvironmentInfo>): void => {
+app.get('/environment', (_req: Request, res: Response<EnvironmentInfo>): void => {
 	res.json({
 		platform: process.platform,
 		nodeVersion: process.version,
