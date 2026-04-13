@@ -146,7 +146,7 @@ Answer:
 
 	try {
 		const payload = {
-			model: body.model || 'microsoft/phi-2',
+			model: body.model || 'microsoft/phi-1_5',
 			prompt: fullPrompt,
 			max_tokens: body.max_tokens,
 			temperature: body.temperature,
@@ -186,7 +186,7 @@ app.post('/v1/chat/completions', async (req: Request, res: Response): Promise<vo
 
 	try {
 		const payload = {
-			model: body.model || 'microsoft/phi-2',
+			model: body.model || 'microsoft/phi-1_5',
 			messages: body.messages,
 			max_tokens: body.max_tokens,
 			temperature: body.temperature,

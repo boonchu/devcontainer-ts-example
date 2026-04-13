@@ -12,7 +12,7 @@ If you already have VS Code and Docker installed, you can click the badge above 
 
 Follow these steps to open this sample in a container using the VS Code Dev Containers extension:
 
-1. ### If this is your first time using a WSL2 development container, please ensure your system meets the pre-reqs:
+1. #### If this is your first time using a WSL2 development container, please ensure your system meets the pre-reqs:
    - Install Docker service in WSL2.
    - Ensure the NVIDIA GPU driver is installed.
    - Installing [NVIDIA Container Toolkit](https://github.com/NVIDIA/nvidia-container-toolkit).
@@ -28,7 +28,7 @@ sudo apt-get install -y nvidia-container-toolkit
 sudo systemctl restart docker
 ```
 
-2. ### How to run example:
+2. #### How to run example:
    - Pull model `phi`
    - Run Curl
 
@@ -47,24 +47,23 @@ curl -X POST http://localhost:3000/v1/completions \
 [GIN] 2026/04/12 - 20:08:21 | 200 |          1m1s |      172.18.0.3 | POST     "/api/generate"
 [GIN] 2026/04/12 - 20:10:21 | 200 | 36.227724978s |      172.18.0.3 | POST     "/api/generate"
 
-curl -X POST http://localhost:3000/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "phi",
+curl http://localhost:3000/v1/chat/completions  \
+  -H "Content-Type: application/json"   -d '{
+    "model": "microsoft/phi-1_5",
     "messages": [
-      {"role": "system", "content": "You are Phi-2, an AI assistant expert in mathematics. Solve equations step-by-step, show your work clearly, and explain each step logically."},
-      {"role": "user", "content": "Solve the quadratic equation: 2x² - 5x - 3 = 0. Provide the solutions and verify one of them."}
+      {"role": "system", "content": "You are a helpful assistant."},
+      {"role": "user", "content": "Hello!"}
     ]
   }'
 ```
 
-3. ### Watch load from `nvtop` or NVDIA Control Panel
+3. #### Watch load from `nvtop` or NVDIA Control Panel
 
 ```
 docker run --rm -t --gpus all nvidia/cuda:12.9.0-base-ubuntu22.04 bash -c "apt-get update && apt-get install -y nvtop && nvtop"
 ```
 
-4. ### When devcontainer does not start, try to troubleshoot it from top level:
+4. #### When devcontainer cannot start `vllm`, try to troubleshoot it from top level:
 
 ```
 # --> Most cleaning way: Access "Remote Explorer" and delete all instance from "DEV CONTAINER" list.
@@ -72,4 +71,5 @@ docker stop vscode-remote-try-node_devcontainer-app-1 vscode-remote-try-node_dev
 docker rm vscode-remote-try-node_devcontainer-app-1 vscode-remote-try-node_devcontainer-vllm-1
 rm -rf /tmp/devcontainercli-*
 devcontainer up
+docker logs vscode-remote-try-node_devcontainer-vllm-1 -f
 ```
