@@ -20,7 +20,7 @@ services:
     image: vllm/vllm-openai:latest
     ports:
       - 8000:8000
-    command: --model microsoft/phi-1_5 --gpu-memory-utilization 0.75 --max-num-seqs 1 --max-model-len 450 --enforce-eager
+    command: --model microsoft/phi-1_5 --gpu-memory-utilization 0.75 --max-num-seqs 1 --max-model-len 100 --enforce-eager
     deploy:
       resources:
         reservations:
