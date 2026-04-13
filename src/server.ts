@@ -1,11 +1,6 @@
 import express, { Express, Request, Response } from 'express';
 import os from 'os';
-
-// Types
-interface Document {
-	id: string;
-	text: string;
-}
+import { retrieveDocuments } from './retrievalDocuments';
 
 interface EnvironmentInfo {
 	platform: string;
@@ -19,70 +14,98 @@ interface EnvironmentInfo {
 	vllmVersion: Record<string, unknown> | null;
 }
 
-interface OllamaResponse {
-	model: string;
-	created_at: string;
-	response: string;
-	done: boolean;
-}
-
 interface ChatMessage {
 	role: 'system' | 'user' | 'assistant';
 	content: string;
 }
 
-interface ChatRequest {
+interface OpenAICompletionRequest {
 	model?: string;
-	messages: ChatMessage[];
+	prompt?: string | string[];
+	max_tokens?: number;
+	temperature?: number;
+	top_p?: number;
+	n?: number;
+	stream?: boolean;
+	logprobs?: number;
+	echo?: boolean;
+	stop?: string | string[];
+	presence_penalty?: number;
+	frequency_penalty?: number;
+	best_of?: number;
+	logit_bias?: Record<string, number>;
+	user?: string;
 }
 
-interface ChatResponse {
+interface OpenAICompletionChoice {
+	text: string;
+	index: number;
+	logprobs: unknown | null;
+	finish_reason: string | null;
+}
+
+interface OpenAICompletionResponse {
+	id: string;
+	object: string;
+	created: number;
 	model: string;
-	created_at: string;
+	choices: OpenAICompletionChoice[];
+	usage?: {
+		prompt_tokens?: number;
+		completion_tokens?: number;
+		total_tokens?: number;
+	};
+}
+
+interface OpenAIChatCompletionRequest {
+	model?: string;
+	messages: ChatMessage[];
+	max_tokens?: number;
+	temperature?: number;
+	top_p?: number;
+	n?: number;
+	stream?: boolean;
+	stop?: string | string[];
+	presence_penalty?: number;
+	frequency_penalty?: number;
+	logit_bias?: Record<string, number>;
+	user?: string;
+}
+
+interface OpenAIChatCompletionChoice {
+	index: number;
 	message: ChatMessage;
-	done: boolean;
+	finish_reason: string | null;
+}
+
+interface OpenAIChatCompletionResponse {
+	id: string;
+	object: string;
+	created: number;
+	model: string;
+	choices: OpenAIChatCompletionChoice[];
+	usage?: {
+		prompt_tokens?: number;
+		completion_tokens?: number;
+		total_tokens?: number;
+	};
 }
 
 // Constants
 const PORT: number = 3000;
 const HOST: string = '0.0.0.0';
-
-// Retrieval helper
-const documents: Document[] = [
-	{ id: '1', text: 'The privacy policy states user data is retained for 30 days.' },
-	{ id: '2', text: 'Payment information is encrypted and stored securely.' },
-	{ id: '3', text: 'We do not share user email addresses with third parties.' }
-];
-
-function scoreDocument(query: string, doc: Document): number {
-	const queryTerms = query.toLowerCase().split(/\s+/);
-	const text = doc.text.toLowerCase();
-	return queryTerms.reduce((score, term) => score + (text.includes(term) ? 1 : 0), 0);
-}
-
-async function retrieveDocuments(query: string): Promise<Document[]> {
-	return documents
-		.map(doc => ({ doc, score: scoreDocument(query, doc) }))
-		.filter(item => item.score > 0)
-		.sort((a, b) => b.score - a.score)
-		.slice(0, 3)
-		.map(item => item.doc);
-}
-
-// App
 const app: Express = express();
-
 app.use(express.json());
 
 app.get('/', (_req: Request, res: Response): void => {
 	res.send('Starting LLM Service...\n');
 });
 
-app.get('/app/version', async (_req: Request, res: Response<EnvironmentInfo>): Promise<void> => {
+app.get('/version', async (_req: Request, res: Response<EnvironmentInfo>): Promise<void> => {
 	let vllmVersion: Record<string, unknown> | null = null;
 
 	try {
-		const response = await fetch('http://vllm:8000/api/version');
+		const response = await fetch('http://vllm:8000/version');
 		if (response.ok) {
 			vllmVersion = await response.json() as Record<string, unknown>;
 		}
@@ -103,51 +126,88 @@ app.get('/app/version', async (_req: Request, res: Response<EnvironmentInfo>): P
 	});
 });
 
-app.post('/api/generate', async (req: Request, res: Response): Promise<void> => {
-	const { prompt } = req.body;
-	const docs = await retrieveDocuments(prompt);
+app.post('/v1/completions', async (req: Request, res: Response): Promise<void> => {
+	const body = req.body as OpenAICompletionRequest;
 
+	if (!body.prompt) {
+		res.status(400).json({ error: 'Missing prompt in request body.' });
+		return;
+	}
+
+	const promptText = Array.isArray(body.prompt) ? body.prompt.join('\n') : body.prompt;
+	const docs = await retrieveDocuments(promptText);
 	const context = docs.map((d, i) => `Context ${i + 1}: ${d.text}`).join('\n\n');
 	const fullPrompt = `
-Use the following documents to answer the question.
-If the answer is not in the documents, say "I don't know."
-
+Say "I don't know." when answer is not found in the documents. Always use information from the documents to answer.
 ${context}
-
-Question: ${prompt}
+Question: ${promptText}
 Answer:
 `;
+
 	try {
+		const payload = {
+			model: body.model || 'microsoft/phi-2',
+			prompt: fullPrompt,
+			max_tokens: body.max_tokens,
+			temperature: body.temperature,
+			top_p: body.top_p,
+			n: body.n,
+			stream: body.stream,
+			logprobs: body.logprobs,
+			echo: body.echo,
+			stop: body.stop,
+			presence_penalty: body.presence_penalty,
+			frequency_penalty: body.frequency_penalty,
+			best_of: body.best_of,
+			logit_bias: body.logit_bias,
+			user: body.user,
+		};
+
 		const response = await fetch('http://vllm:8000/v1/completions', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				model: 'microsoft/phi-2',
-				prompt: fullPrompt,
-				max_tokens: 512
-			})
+			body: JSON.stringify(payload)
 		});
-		const data = await response.json() as OllamaResponse;
-		res.json({ response: data.response });
+
+		const data = await response.json() as OpenAICompletionResponse;
+		res.status(response.status).json(data);
 	} catch (error: any) {
 		res.status(500).json({ error: error.message });
 	}
 });
 
-app.post('/app/chat', async (req: Request, res: Response): Promise<void> => {
-	const { messages } = req.body as ChatRequest;
+app.post('/v1/chat/completions', async (req: Request, res: Response): Promise<void> => {
+	const body = req.body as OpenAIChatCompletionRequest;
+
+	if (!body.messages || !Array.isArray(body.messages)) {
+		res.status(400).json({ error: 'Missing messages array in request body.' });
+		return;
+	}
+
 	try {
+		const payload = {
+			model: body.model || 'microsoft/phi-2',
+			messages: body.messages,
+			max_tokens: body.max_tokens,
+			temperature: body.temperature,
+			top_p: body.top_p,
+			n: body.n,
+			stream: body.stream,
+			stop: body.stop,
+			presence_penalty: body.presence_penalty,
+			frequency_penalty: body.frequency_penalty,
+			logit_bias: body.logit_bias,
+			user: body.user,
+		};
+
 		const response = await fetch('http://vllm:8000/v1/chat/completions', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				model: 'microsoft/phi-2',
-				messages: messages,
-				max_tokens: 512
-			})
+			body: JSON.stringify(payload)
 		});
-		const data = await response.json() as ChatResponse;
-		res.json({ response: data.message.content });
+
+		const data = await response.json() as OpenAIChatCompletionResponse;
+		res.status(response.status).json(data);
 	} catch (error: any) {
 		res.status(500).json({ error: error.message });
 	}

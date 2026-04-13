@@ -12,13 +12,15 @@ services:
       - vllm
 
   # vllm: Faster inference (optimized batching) and support for larger models, but more complex setup and higher resource usage.
+  # options:
+  # - reduce gpu memory utilization (e.g., 0.6) to fit larger models, but may impact performance.
+  # - set max-num-seqs to 1 to minimize memory usage, but may reduce throughput for multiple requests.
+  # - set max-model-len to 2048 to limit input length and reduce memory usage, but may truncate longer inputs.
   vllm:
     image: vllm/vllm-openai:latest
     ports:
       - 8000:8000
-    environment:
-      - MODEL_NAME=microsoft/phi-2
-    command: --model microsoft/phi-2 --tensor-parallel-size 1
+    command: --model microsoft/phi-1_5 --gpu-memory-utilization 0.75 --max-num-seqs 1 --max-model-len 450 --enforce-eager
     deploy:
       resources:
         reservations:
@@ -26,6 +28,12 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/v1/models || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 120s # Important: allows time for large model downloads/loading
     volumes:
       - huggingface_cache:/root/.cache/huggingface
 
@@ -39,3 +47,7 @@ services:
   #           - driver: nvidia
   #             count: 1
   #             capabilities: [gpu]
+
+volumes:
+  huggingface_cache:
+    external: true

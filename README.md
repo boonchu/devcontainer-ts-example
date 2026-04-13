@@ -35,15 +35,19 @@ sudo systemctl restart docker
 ```
 docker exec vscode-remote-try-node_devcontainer-ollama-1 ollama pull phi
 
-curl -X POST http://localhost:3000/api/generate \
-   -H "Content-Type: application/json" \
-   -d '{"prompt": "Please demostrate how the private policy works."}'
+curl -X POST http://localhost:3000/v1/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "microsoft/phi-1_5",
+    "prompt": "Explain the privacy policy in simple terms.",
+    "max_tokens": 100
+  }'
 
 # results from my MX450 GPU (TTFT: 1 minute)
 [GIN] 2026/04/12 - 20:08:21 | 200 |          1m1s |      172.18.0.3 | POST     "/api/generate"
 [GIN] 2026/04/12 - 20:10:21 | 200 | 36.227724978s |      172.18.0.3 | POST     "/api/generate"
 
-curl -X POST http://localhost:3000/app/chat \
+curl -X POST http://localhost:3000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
     "model": "phi",
@@ -63,8 +67,9 @@ docker run --rm -t --gpus all nvidia/cuda:12.9.0-base-ubuntu22.04 bash -c "apt-g
 4. ### When devcontainer does not start, try to troubleshoot it from top level:
 
 ```
-# shutdown docker compose first
- docker compose --project-name vscode-remote-try-node_devcontainer -f /home/bigchoo/vscode-remote-try-node/.devcontainer/docker-compose.yml -f /tmp/<find docker filepath from past output>.yml -f /tmp/devcontainercli-<find docker filepath from past output>*.yml down
+# --> Most cleaning way: Access "Remote Explorer" and delete all instance from "DEV CONTAINER" list.
+docker stop vscode-remote-try-node_devcontainer-app-1 vscode-remote-try-node_devcontainer-vllm-1
+docker rm vscode-remote-try-node_devcontainer-app-1 vscode-remote-try-node_devcontainer-vllm-1
 rm -rf /tmp/devcontainercli-*
 devcontainer up
 ```

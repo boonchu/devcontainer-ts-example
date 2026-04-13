@@ -8,7 +8,7 @@
 	"workspaceFolder": "/workspace",
 	"runServices": [
 		"app",
-		"ollama"
+		"vllm"
 	],
 	// Configure tool-specific properties.
 	"customizations": {
@@ -30,7 +30,7 @@
 			"onAutoForward": "notify"
 		},
 		"11434": {
-			"label": "Ollama API",
+			"label": "vllm API",
 			"onAutoForward": "notify"
 		}
 	},

@@ -15,9 +15,13 @@
   "dependencies": {
     "@types/express": "^5.0.6",
     "@types/node": "^25.6.0",
-    "express": "^4.20.0"
+    "express": "^4.20.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.8",
     "husky": "^8.0.0",
     "lint-staged": "^14.0.0",
     "prettier": "^3.0.0",
