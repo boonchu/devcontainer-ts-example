@@ -29,12 +29,13 @@ sudo systemctl restart docker
 ```
 
 2. #### How to run example:
-   - Pull model `phi`
-   - Run Curl
-
+- If you want to start devcontainer from cli, you need to install devcontainer first. Otherwise let's vscode to handle everything for you.
 ```
-docker exec vscode-remote-try-node_devcontainer-ollama-1 ollama pull phi
-
+npm install -g @devcontainers/cli
+devcontainer up
+```
+- Run Curl
+```
 curl -X POST http://localhost:3000/v1/completions \
   -H "Content-Type: application/json" \
   -d '{
@@ -57,7 +58,7 @@ curl http://localhost:3000/v1/chat/completions  \
   }'
 ```
 
-3. #### Watch load from `nvtop` or NVDIA Control Panel
+3. #### Watch load from `nvtop` or NVIDIA Control Panel
 
 ```
 docker run --rm -t --gpus all nvidia/cuda:12.9.0-base-ubuntu22.04 bash -c "apt-get update && apt-get install -y nvtop && nvtop"
@@ -67,9 +68,9 @@ docker run --rm -t --gpus all nvidia/cuda:12.9.0-base-ubuntu22.04 bash -c "apt-g
 
 ```
 # --> Most cleaning way: Access "Remote Explorer" and delete all instance from "DEV CONTAINER" list.
-docker stop vscode-remote-try-node_devcontainer-app-1 vscode-remote-try-node_devcontainer-vllm-1
-docker rm vscode-remote-try-node_devcontainer-app-1 vscode-remote-try-node_devcontainer-vllm-1
+docker stop devcontainer-ts-example_devcontainer-app-1 devcontainer-ts-example_devcontainer-vllm-1
+docker rm devcontainer-ts-example_devcontainer-app-1 devcontainer-ts-example_devcontainer-vllm-1
 rm -rf /tmp/devcontainercli-*
 devcontainer up
-docker logs vscode-remote-try-node_devcontainer-vllm-1 -f
+docker logs devcontainer-ts-example_devcontainer-vllm-1 -f
 ```

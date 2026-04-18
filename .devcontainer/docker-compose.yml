@@ -11,6 +11,17 @@ services:
     depends_on:
       - vllm
 
+  gpu_test:
+    image: nvidia/cuda:12.9.0-base-ubuntu22.04
+    command: nvidia-smi
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [ gpu ]
+
   # vllm: Faster inference (optimized batching) and support for larger models, but more complex setup and higher resource usage.
   # options:
   # - reduce gpu memory utilization (e.g., 0.6) to fit larger models, but may impact performance.
@@ -20,34 +31,24 @@ services:
     image: vllm/vllm-openai:latest
     ports:
       - 8000:8000
-    command: --model microsoft/phi-1_5 --gpu-memory-utilization 0.75 --max-num-seqs 1 --max-model-len 100 --enforce-eager
+    command: --model microsoft/phi-1_5 --gpu-memory-utilization 0.75 --max-num-seqs 1 --max-model-len 512 --enforce-eager
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
               count: 1
-              capabilities: [gpu]
+              capabilities: [ gpu ]
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8000/v1/models || exit 1"]
+      test: [ "CMD-SHELL", "curl -f http://localhost:8000/v1/models || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 10
       start_period: 120s # Important: allows time for large model downloads/loading
     volumes:
       - huggingface_cache:/root/.cache/huggingface
-
-  # test:
-  #   image: nvidia/cuda:12.9.0-base-ubuntu22.04
-  #   command: nvidia-smi
-  #   deploy:
-  #     resources:
-  #       reservations:
-  #         devices:
-  #           - driver: nvidia
-  #             count: 1
-  #             capabilities: [gpu]
+    depends_on:
+      - gpu_test
 
 volumes:
   huggingface_cache:
-    external: true

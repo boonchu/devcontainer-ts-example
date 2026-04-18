@@ -1,0 +1,14 @@
+{
+    "cSpell.words": [
+        "cuda",
+        "devcontainercli",
+        "healthcheck",
+        "huggingface",
+        "logit",
+        "logprobs",
+        "nvtop",
+        "seqs",
+        "TTFT",
+        "vllm"
+    ]
+}
