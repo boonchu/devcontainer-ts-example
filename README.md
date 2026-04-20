@@ -36,13 +36,11 @@ devcontainer up
 ```
 - Run Curl
 ```
-curl -X POST http://localhost:3000/v1/completions \
-  -H "Content-Type: application/json" \
-  -d '{
+curl -X POST http://localhost:3000/v1/completions   -H "Content-Type: application/json" -s  -d '{
     "model": "microsoft/phi-1_5",
     "prompt": "Explain the privacy policy in simple terms.",
-    "max_tokens": 100
-  }'
+    "max_tokens": 350
+  }' | jq -r .choices[].text
 
 # results from my MX450 GPU (TTFT: 1 minute)
 [GIN] 2026/04/12 - 20:08:21 | 200 |          1m1s |      172.18.0.3 | POST     "/api/generate"
